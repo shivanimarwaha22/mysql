@@ -1,0 +1,91 @@
+
+USE mydb;
+
+-- Create the employee table
+CREATE TABLE employee (
+    empid INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50)
+);
+
+##Create the manager table with a foreign key relationship to the employee table
+CREATE TABLE manager (
+    manager_name VARCHAR(50),
+    empid INT,
+    FOREIGN KEY (empid) REFERENCES employee(empid)
+);
+
+##Insert values into the employee table
+INSERT INTO employee (empid, first_name, last_name) VALUES
+(1, 'Amit', 'Sharma'),
+(2, 'Priya', 'Singh'),
+(3, 'Ravi', 'Patel'),
+(4, 'Anjali', 'Nair'),
+(5, 'Vikas', 'Mehta');
+
+##Insert values into the manager table
+INSERT INTO manager (manager_name, empid) VALUES
+('Rajesh Kumar', 1),
+('Rajesh Kumar', 2),
+('Suman Verma', 3),
+('Suman Verma', 4),
+('Rajesh Kumar', 5);
+
+1. Get all employees under each manager with a count of employees for each manager
+SELECT 
+    manager.manager_name,
+    employee.first_name,
+    employee.last_name,
+    COUNT(employee.empid) OVER (PARTITION BY manager.manager_name) AS employee_count
+FROM 
+    manager
+JOIN 
+    employee ON manager.empid = employee.empid
+ORDER BY 
+    manager.manager_name;
+
+ 2. Get the number of employees under a specific manager (e.g., 'Rajesh Kumar')
+SELECT 
+    manager.manager_name,
+    COUNT(employee.empid) AS employee_count
+FROM 
+    manager
+JOIN 
+    employee ON manager.empid = employee.empid
+WHERE 
+    manager.manager_name = 'Rajesh Kumar'
+GROUP BY 
+    manager.manager_name;
+
+ 3. Get all manager details (distinct manager names)
+SELECT DISTINCT 
+    manager_name
+FROM 
+    manager;
+
+4. Find any employee who has not been assigned a manager
+SELECT 
+    employee.first_name,
+    employee.last_name
+FROM 
+    employee
+LEFT JOIN 
+    manager ON employee.empid = manager.empid
+WHERE 
+    manager.empid IS NULL;
+
+ 5. Write a function to get the full name (first_name + last_name)
+DELIMITER //
+CREATE FUNCTION get_fullname(first_name VARCHAR(50), last_name VARCHAR(50))
+RETURNS VARCHAR(100)
+DETERMINISTIC
+BEGIN
+    RETURN CONCAT(first_name, ' ', last_name);
+END //
+DELIMITER ;
+
+-- Use the function to get full names of all employees
+SELECT 
+    get_fullname(first_name, last_name) AS full_name
+FROM 
+    employee;
